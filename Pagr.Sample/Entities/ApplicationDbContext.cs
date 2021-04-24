@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Pagr.Tests.Entities
+namespace Pagr.Sample.Entities
 {
     public class ApplicationDbContext : DbContext
     {

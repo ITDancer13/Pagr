@@ -1,8 +1,8 @@
 ﻿using System.Linq;
+using Pagr.Sample.Entities;
 using Pagr.Services;
-using Pagr.Tests.Entities;
 
-namespace Pagr.Tests.Services
+namespace Pagr.Sample.Services
 {
     public class PagrCustomSortMethods : IPagrCustomSortMethods
     {

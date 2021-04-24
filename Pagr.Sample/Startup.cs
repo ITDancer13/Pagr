@@ -8,29 +8,32 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Pagr.Models;
+using Pagr.Sample.Entities;
+using Pagr.Sample.Services;
 using Pagr.Services;
-using Pagr.Tests.Entities;
-using Pagr.Tests.Services;
 
-namespace Pagr.Tests
+namespace Pagr.Sample
 {
     public class Startup
     {
+        private IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
-
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
+        
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc(opts =>
+            {
+                opts.EnableEndpointRouting = false;
+            });
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("TestSqlServer")));
+                options.UseSqlite("Data Source=.\\pagr.db"));
 
             services.Configure<PagrOptions>(Configuration.GetSection("Pagr"));
 
@@ -39,9 +42,12 @@ namespace Pagr.Tests
             services.AddScoped<IPagrProcessor, ApplicationPagrProcessor>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            using var scope = app.ApplicationServices.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Database.Migrate();
+
             // TIME MEASUREMENT
             var times = new List<long>();
             app.Use(async (context, next) =>

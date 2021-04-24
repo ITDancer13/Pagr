@@ -2,10 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pagr.Models;
+using Pagr.Sample.Entities;
 using Pagr.Services;
-using Pagr.Tests.Entities;
 
-namespace Pagr.Tests.Controllers
+namespace Pagr.Sample.Controllers
 {
     [Route("api/[controller]/[action]")]
     public class PostsController : Controller

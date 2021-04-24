@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
 using Pagr.Models;
+using Pagr.Sample.Entities;
 using Pagr.Services;
-using Pagr.Tests.Entities;
 
-namespace Pagr.Tests.Services
+namespace Pagr.Sample.Services
 {
     public class ApplicationPagrProcessor : PagrProcessor
     {

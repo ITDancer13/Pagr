@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Pagr.Attributes;
 
-namespace Pagr.Tests.Entities
+namespace Pagr.Sample.Entities
 {
     public class Post
     {
