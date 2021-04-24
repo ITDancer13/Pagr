@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.CI.AzurePipelines;
@@ -33,7 +33,7 @@ class Build : NukeBuild
     [Solution]
     readonly Solution Solution;
 
-    Project SieveProject => Solution.AllProjects.First(p => p.Name == "Sieve");
+    Project PagrProject => Solution.AllProjects.First(p => p.Name == "Pagr");
 
     [GitRepository]
     readonly GitRepository GitRepository;
@@ -86,7 +86,7 @@ class Build : NukeBuild
         .Executes(() =>
         {
             DotNetPack(s => s
-                .SetProject(SieveProject)
+                .SetProject(PagrProject)
                 .SetConfiguration(Configuration)
                 .SetOutputDirectory(OutputDirectory)
                 .SetVersion(GitVersion.NuGetVersionV2)
