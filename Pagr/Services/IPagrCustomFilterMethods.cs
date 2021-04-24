@@ -1,6 +1,4 @@
 ﻿namespace Pagr.Services
 {
-    public interface IPagrCustomFilterMethods
-    {
-    }
+    public interface IPagrCustomFilterMethods { }
 }

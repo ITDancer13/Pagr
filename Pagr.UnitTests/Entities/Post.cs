@@ -29,6 +29,7 @@ namespace Pagr.UnitTests.Entities
         public int OnlySortableViaFluentApi { get; set; }
 
         public Comment TopComment { get; set; }
+        
         public Comment FeaturedComment { get; set; }
     }
 }

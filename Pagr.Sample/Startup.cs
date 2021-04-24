@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,23 +39,7 @@ namespace Pagr.Sample
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            using var scope = app.ApplicationServices.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            dbContext.Database.Migrate();
-
-            // TIME MEASUREMENT
-            var times = new List<long>();
-            app.Use(async (context, next) =>
-            {
-                var sw = new Stopwatch();
-                sw.Start();
-                await next.Invoke();
-                sw.Stop();
-                times.Add(sw.ElapsedMilliseconds);
-                var text = $"AVG: {(int)times.Average()}ms; AT {sw.ElapsedMilliseconds}; COUNT: {times.Count()}";
-                Console.WriteLine(text);
-                await context.Response.WriteAsync($"<!-- {text} -->");
-            });
+            PrepareDatabase(app);
 
             if (env.IsDevelopment())
             {
@@ -68,6 +47,14 @@ namespace Pagr.Sample
             }
 
             app.UseMvc();
+        }
+
+        private static void PrepareDatabase(IApplicationBuilder app)
+        {
+            using var scope = app.ApplicationServices.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Database.EnsureDeleted();
+            dbContext.Database.Migrate();
         }
     }
 }

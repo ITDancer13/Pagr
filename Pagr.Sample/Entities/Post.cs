@@ -9,7 +9,7 @@ namespace Pagr.Sample.Entities
         public int Id { get; set; }
 
         [Pagr(CanFilter = true, CanSort = true)]
-        public string Title { get; set; } = Guid.NewGuid().ToString().Replace("-", string.Empty).Substring(0, 8);
+        public string Title { get; set; } = Guid.NewGuid().ToString().Replace("-", string.Empty)[..8];
 
         [Pagr(CanFilter = true, CanSort = true)]
         public int LikeCount { get; set; } = new Random().Next(0, 1000);

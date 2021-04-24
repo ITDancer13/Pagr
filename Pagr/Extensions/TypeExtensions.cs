@@ -2,7 +2,7 @@
 
 namespace Pagr.Extensions
 {
-    public static partial class TypeExtensions
+    public static class TypeExtensions
     {
         public static bool IsNullable(this Type type)
         {

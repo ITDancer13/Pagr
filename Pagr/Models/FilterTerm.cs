@@ -53,7 +53,7 @@ namespace Pagr.Models
 
         public string Operator { get; private set; }
 
-        private FilterOperator GetOperatorParsed(string @operator)
+        private static FilterOperator GetOperatorParsed(string @operator)
         {
             switch (@operator.TrimEnd('*'))
             {

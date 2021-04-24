@@ -4,7 +4,7 @@ namespace Pagr.Exceptions
 {
     public class PagrMethodNotFoundException : PagrException
     {
-        public string MethodName { get; protected set; }
+        public string MethodName { get; }
 
         public PagrMethodNotFoundException(string methodName, string message) : base(message)
         {

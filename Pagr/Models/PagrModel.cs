@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -38,11 +39,11 @@ namespace Pagr.Models
 
                     if (filter.StartsWith("("))
                     {
-                        var filterOpAndVal = filter.Substring(filter.LastIndexOf(")") + 1);
-                        var subfilters = filter.Replace(filterOpAndVal, "").Replace("(", "").Replace(")", "");
+                        var filterOpAndVal = filter.Substring(filter.LastIndexOf(")", StringComparison.Ordinal) + 1);
+                        var subFilters = filter.Replace(filterOpAndVal, "").Replace("(", "").Replace(")", "");
                         var filterTerm = new TFilterTerm
                         {
-                            Filter = subfilters + filterOpAndVal
+                            Filter = subFilters + filterOpAndVal
                         };
                         value.Add(filterTerm);
                     }
@@ -65,29 +66,28 @@ namespace Pagr.Models
 
         public List<TSortTerm> GetSortsParsed()
         {
-            if (Sorts != null)
-            {
-                var value = new List<TSortTerm>();
-                foreach (var sort in Regex.Split(Sorts, EscapedCommaPattern))
-                {
-                    if (string.IsNullOrWhiteSpace(sort)) continue;
-
-                    var sortTerm = new TSortTerm()
-                    {
-                        Sort = sort
-                    };
-                    if (!value.Any(s => s.Name == sortTerm.Name))
-                    {
-                        value.Add(sortTerm);
-                    }
-                }
-                return value;
-            }
-            else
+            if (Sorts == null)
             {
                 return null;
             }
 
+            var value = new List<TSortTerm>();
+            foreach (var sort in Regex.Split(Sorts, EscapedCommaPattern))
+            {
+                if (string.IsNullOrWhiteSpace(sort)) continue;
+
+                var sortTerm = new TSortTerm
+                {
+                    Sort = sort
+                };
+
+                if (value.All(s => s.Name != sortTerm.Name))
+                {
+                    value.Add(sortTerm);
+                }
+            }
+
+            return value;
         }
     }
 }

@@ -7,17 +7,20 @@ using Pagr.Services;
 using Pagr.UnitTests.Entities;
 using Pagr.UnitTests.Services;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Pagr.UnitTests
 {
     public class General
     {
+        private readonly ITestOutputHelper _testOutputHelper;
         private readonly PagrProcessor _processor;
         private readonly IQueryable<Post> _posts;
         private readonly IQueryable<Comment> _comments;
 
-        public General()
+        public General(ITestOutputHelper testOutputHelper)
         {
+            _testOutputHelper = testOutputHelper;
             _processor = new ApplicationPagrProcessor(new PagrOptionsAccessor(),
                 new PagrCustomSortMethods(),
                 new PagrCustomFilterMethods());
@@ -189,9 +192,9 @@ namespace Pagr.UnitTests
                 Filters = "LikeCount==50",
             };
 
-            Console.WriteLine(model.GetFiltersParsed()[0].Values);
-            Console.WriteLine(model.GetFiltersParsed()[0].Operator);
-            Console.WriteLine(model.GetFiltersParsed()[0].OperatorParsed);
+            _testOutputHelper.WriteLine(model.GetFiltersParsed()[0].Values.ToString());
+            _testOutputHelper.WriteLine(model.GetFiltersParsed()[0].Operator);
+            _testOutputHelper.WriteLine(model.GetFiltersParsed()[0].OperatorParsed.ToString());
 
             var result = _processor.Apply(model, _posts);
 

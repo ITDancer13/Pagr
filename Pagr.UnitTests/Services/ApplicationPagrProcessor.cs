@@ -8,10 +8,7 @@ namespace Pagr.UnitTests.Services
 {
     public class ApplicationPagrProcessor : PagrProcessor
     {
-        public ApplicationPagrProcessor(
-            IOptions<PagrOptions> options,
-            IPagrCustomSortMethods customSortMethods,
-            IPagrCustomFilterMethods customFilterMethods)
+        public ApplicationPagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods, IPagrCustomFilterMethods customFilterMethods)
             : base(options, customSortMethods, customFilterMethods)
         {
         }

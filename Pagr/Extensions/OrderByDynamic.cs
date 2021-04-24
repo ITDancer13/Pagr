@@ -7,12 +7,8 @@ namespace Pagr.Extensions
 {
     public static partial class LinqExtensions
     {
-        public static IQueryable<TEntity> OrderByDynamic<TEntity>(
-            this IQueryable<TEntity> source,
-            string fullPropertyName,
-            PropertyInfo propertyInfo,
-            bool desc,
-            bool useThenBy)
+        public static IQueryable<TEntity> OrderByDynamic<TEntity>(this IQueryable<TEntity> source, string fullPropertyName,
+            PropertyInfo propertyInfo, bool desc, bool useThenBy)
         {
             var lambda = GenerateLambdaWithSafeMemberAccess<TEntity>(fullPropertyName, propertyInfo);
 
@@ -20,21 +16,13 @@ namespace Pagr.Extensions
                 ? (useThenBy ? "ThenByDescending" : "OrderByDescending")
                 : (useThenBy ? "ThenBy" : "OrderBy");
 
-            var resultExpression = Expression.Call(
-                typeof(Queryable),
-                command,
-                new Type[] { typeof(TEntity), lambda.ReturnType },
-                source.Expression,
-                Expression.Quote(lambda));
+            var resultExpression = Expression.Call(typeof(Queryable), command,
+                new[] { typeof(TEntity), lambda.ReturnType }, source.Expression, Expression.Quote(lambda));
 
             return source.Provider.CreateQuery<TEntity>(resultExpression);
         }
 
-        private static Expression<Func<TEntity, object>> GenerateLambdaWithSafeMemberAccess<TEntity>
-        (
-            string fullPropertyName,
-            PropertyInfo propertyInfo
-        )
+        private static Expression<Func<TEntity, object>> GenerateLambdaWithSafeMemberAccess<TEntity>(string fullPropertyName, MemberInfo memberInfo)
         {
             var parameter = Expression.Parameter(typeof(TEntity), "e");
             Expression propertyValue = parameter;
@@ -49,7 +37,7 @@ namespace Pagr.Extensions
                 catch (ArgumentException)
                 {
                     // name is not a direct property of field of propertyValue expression. construct a memberAccess then.
-                    propertyValue = Expression.MakeMemberAccess(propertyValue, propertyInfo);
+                    propertyValue = Expression.MakeMemberAccess(propertyValue, memberInfo);
                 }
 
                 if (propertyValue.Type.IsNullable())

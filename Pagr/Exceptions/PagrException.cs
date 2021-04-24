@@ -18,9 +18,7 @@ namespace Pagr.Exceptions
         {
         }
 
-        protected PagrException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
+        protected PagrException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }

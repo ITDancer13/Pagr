@@ -4,15 +4,13 @@ namespace Pagr.Exceptions
 {
     public class PagrIncompatibleMethodException : PagrException
     {
-        public string MethodName { get; protected set; }
-        public Type ExpectedType { get; protected set; }
-        public Type ActualType { get; protected set; }
+        public string MethodName { get; }
 
-        public PagrIncompatibleMethodException(
-            string methodName,
-            Type expectedType,
-            Type actualType,
-            string message)
+        public Type ExpectedType { get; }
+
+        public Type ActualType { get; }
+
+        public PagrIncompatibleMethodException(string methodName, Type expectedType, Type actualType, string message)
             : base(message)
         {
             MethodName = methodName;
@@ -20,12 +18,7 @@ namespace Pagr.Exceptions
             ActualType = actualType;
         }
 
-        public PagrIncompatibleMethodException(
-            string methodName,
-            Type expectedType,
-            Type actualType,
-            string message,
-            Exception innerException)
+        public PagrIncompatibleMethodException(string methodName, Type expectedType, Type actualType, string message, Exception innerException)
             : base(message, innerException)
         {
             MethodName = methodName;

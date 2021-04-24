@@ -14,19 +14,23 @@ namespace Pagr.Services
 {
     public class PagrProcessor : PagrProcessor<PagrModel, FilterTerm, SortTerm>, IPagrProcessor
     {
-        public PagrProcessor(IOptions<PagrOptions> options) : base(options)
+        public PagrProcessor(IOptions<PagrOptions> options)
+            : base(options)
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods) : base(options, customSortMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods)
+            : base(options, customSortMethods)
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomFilterMethods customFilterMethods) : base(options, customFilterMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomFilterMethods customFilterMethods)
+            : base(options, customFilterMethods)
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods, IPagrCustomFilterMethods customFilterMethods) : base(options, customSortMethods, customFilterMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods, IPagrCustomFilterMethods customFilterMethods)
+            : base(options, customSortMethods, customFilterMethods)
         {
         }
     }
@@ -35,19 +39,23 @@ namespace Pagr.Services
         where TFilterTerm : IFilterTerm, new()
         where TSortTerm : ISortTerm, new()
     {
-        public PagrProcessor(IOptions<PagrOptions> options) : base(options)
+        public PagrProcessor(IOptions<PagrOptions> options)
+            : base(options)
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods) : base(options, customSortMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods)
+            : base(options, customSortMethods)
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomFilterMethods customFilterMethods) : base(options, customFilterMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomFilterMethods customFilterMethods)
+            : base(options, customFilterMethods)
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods, IPagrCustomFilterMethods customFilterMethods) : base(options, customSortMethods, customFilterMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods, IPagrCustomFilterMethods customFilterMethods)
+            : base(options, customSortMethods, customFilterMethods)
         {
         }
     }
@@ -57,17 +65,17 @@ namespace Pagr.Services
         where TFilterTerm : IFilterTerm, new()
         where TSortTerm : ISortTerm, new()
     {
-        private const string nullFilterValue = "null";
+        private const string NullFilterValue = "null";
         private readonly IOptions<PagrOptions> _options;
         private readonly IPagrCustomSortMethods _customSortMethods;
         private readonly IPagrCustomFilterMethods _customFilterMethods;
-        private readonly PagrPropertyMapper mapper = new PagrPropertyMapper();
+        private readonly PagrPropertyMapper _mapper = new PagrPropertyMapper();
 
         public PagrProcessor(IOptions<PagrOptions> options,
             IPagrCustomSortMethods customSortMethods,
             IPagrCustomFilterMethods customFilterMethods)
         {
-            mapper = MapProperties(mapper);
+            _mapper = MapProperties(_mapper);
             _options = options;
             _customSortMethods = customSortMethods;
             _customFilterMethods = customFilterMethods;
@@ -76,7 +84,7 @@ namespace Pagr.Services
         public PagrProcessor(IOptions<PagrOptions> options,
             IPagrCustomSortMethods customSortMethods)
         {
-            mapper = MapProperties(mapper);
+            _mapper = MapProperties(_mapper);
             _options = options;
             _customSortMethods = customSortMethods;
         }
@@ -84,14 +92,14 @@ namespace Pagr.Services
         public PagrProcessor(IOptions<PagrOptions> options,
             IPagrCustomFilterMethods customFilterMethods)
         {
-            mapper = MapProperties(mapper);
+            _mapper = MapProperties(_mapper);
             _options = options;
             _customFilterMethods = customFilterMethods;
         }
 
         public PagrProcessor(IOptions<PagrOptions> options)
         {
-            mapper = MapProperties(mapper);
+            _mapper = MapProperties(_mapper);
             _options = options;
         }
 
@@ -106,13 +114,8 @@ namespace Pagr.Services
         /// <param name="applySorting">Should the data be sorted? Defaults to true.</param>
         /// <param name="applyPagination">Should the data be paginated? Defaults to true.</param>
         /// <returns>Returns a transformed version of `source`</returns>
-        public IQueryable<TEntity> Apply<TEntity>(
-            TPagrModel model,
-            IQueryable<TEntity> source,
-            object[] dataForCustomMethods = null,
-            bool applyFiltering = true,
-            bool applySorting = true,
-            bool applyPagination = true)
+        public IQueryable<TEntity> Apply<TEntity>(TPagrModel model, IQueryable<TEntity> source, object[] dataForCustomMethods = null,
+            bool applyFiltering = true, bool applySorting = true, bool applyPagination = true)
         {
             var result = source;
 
@@ -123,19 +126,16 @@ namespace Pagr.Services
 
             try
             {
-                // Filter
                 if (applyFiltering)
                 {
                     result = ApplyFiltering(model, result, dataForCustomMethods);
                 }
 
-                // Sort
                 if (applySorting)
                 {
                     result = ApplySorting(model, result, dataForCustomMethods);
                 }
 
-                // Paginate
                 if (applyPagination)
                 {
                     result = ApplyPagination(model, result);
@@ -145,26 +145,21 @@ namespace Pagr.Services
             }
             catch (Exception ex)
             {
-                if (_options.Value.ThrowExceptions)
-                {
-                    if (ex is PagrException)
-                    {
-                        throw;
-                    }
-
-                    throw new PagrException(ex.Message, ex);
-                }
-                else
+                if (!_options.Value.ThrowExceptions)
                 {
                     return result;
                 }
+
+                if (ex is PagrException)
+                {
+                    throw;
+                }
+
+                throw new PagrException(ex.Message, ex);
             }
         }
 
-        private IQueryable<TEntity> ApplyFiltering<TEntity>(
-            TPagrModel model,
-            IQueryable<TEntity> result,
-            object[] dataForCustomMethods = null)
+        private IQueryable<TEntity> ApplyFiltering<TEntity>(TPagrModel model, IQueryable<TEntity> result, object[] dataForCustomMethods = null)
         {
             if (model?.GetFiltersParsed() == null)
             {
@@ -199,7 +194,7 @@ namespace Pagr.Services
                         var converter = TypeDescriptor.GetConverter(property.PropertyType);
                         foreach (var filterTermValue in filterTerm.Values)
                         {
-                            var isFilterTermValueNull = filterTermValue.ToLower() == nullFilterValue;
+                            var isFilterTermValueNull = filterTermValue.ToLower() == NullFilterValue;
                             var filterValue = isFilterTermValueNull
                                 ? Expression.Constant(null, property.PropertyType)
                                 : ConvertStringValueToConstantExpression(filterTermValue, property, converter);
@@ -231,24 +226,17 @@ namespace Pagr.Services
                                 expression = Expression.AndAlso(filterValueNullCheck, expression);
                             }
 
-                            if (innerExpression == null)
-                            {
-                                innerExpression = expression;
-                            }
-                            else
-                            {
-                                innerExpression = Expression.OrElse(innerExpression, expression);
-                            }
+                            innerExpression = innerExpression == null ? expression : Expression.OrElse(innerExpression, expression);
                         }
                     }
                     else
                     {
-                        result = ApplyCustomMethod(result, filterTermName, _customFilterMethods,
-                            new object[] {
-                                            result,
-                                            filterTerm.Operator,
-                                            filterTerm.Values
-                            }, dataForCustomMethods);
+                        result = ApplyCustomMethod(result, filterTermName, _customFilterMethods, new object[]
+                        {
+                            result,
+                            filterTerm.Operator,
+                            filterTerm.Values
+                        }, dataForCustomMethods);
 
                     }
                 }
@@ -275,7 +263,7 @@ namespace Pagr.Services
                 : Expression.AndAlso(nullCheckExpression, Expression.NotEqual(propertyValue, Expression.Default(propertyValue.Type)));
         }
 
-        private Expression ConvertStringValueToConstantExpression(string value, PropertyInfo property, TypeConverter converter)
+        private static Expression ConvertStringValueToConstantExpression(string value, PropertyInfo property, TypeConverter converter)
         {
             dynamic constantVal = converter.CanConvertFrom(typeof(string))
                 ? converter.ConvertFrom(value)
@@ -286,48 +274,34 @@ namespace Pagr.Services
 
         private static Expression GetExpression(TFilterTerm filterTerm, dynamic filterValue, dynamic propertyValue)
         {
-            switch (filterTerm.OperatorParsed)
+            return filterTerm.OperatorParsed switch
             {
-                case FilterOperator.Equals:
-                    return Expression.Equal(propertyValue, filterValue);
-                case FilterOperator.NotEquals:
-                    return Expression.NotEqual(propertyValue, filterValue);
-                case FilterOperator.GreaterThan:
-                    return Expression.GreaterThan(propertyValue, filterValue);
-                case FilterOperator.LessThan:
-                    return Expression.LessThan(propertyValue, filterValue);
-                case FilterOperator.GreaterThanOrEqualTo:
-                    return Expression.GreaterThanOrEqual(propertyValue, filterValue);
-                case FilterOperator.LessThanOrEqualTo:
-                    return Expression.LessThanOrEqual(propertyValue, filterValue);
-                case FilterOperator.Contains:
-                    return Expression.Call(propertyValue,
-                        typeof(string).GetMethods()
-                        .First(m => m.Name == "Contains" && m.GetParameters().Length == 1),
-                        filterValue);
-                case FilterOperator.StartsWith:
-                    return Expression.Call(propertyValue,
-                        typeof(string).GetMethods()
-                        .First(m => m.Name == "StartsWith" && m.GetParameters().Length == 1),
-                        filterValue);
-                default:
-                    return Expression.Equal(propertyValue, filterValue);
-            }
+                FilterOperator.Equals => Expression.Equal(propertyValue, filterValue),
+                FilterOperator.NotEquals => Expression.NotEqual(propertyValue, filterValue),
+                FilterOperator.GreaterThan => Expression.GreaterThan(propertyValue, filterValue),
+                FilterOperator.LessThan => Expression.LessThan(propertyValue, filterValue),
+                FilterOperator.GreaterThanOrEqualTo => Expression.GreaterThanOrEqual(propertyValue, filterValue),
+                FilterOperator.LessThanOrEqualTo => Expression.LessThanOrEqual(propertyValue, filterValue),
+                FilterOperator.Contains => Expression.Call(propertyValue,
+                    typeof(string).GetMethods().First(m => m.Name == "Contains" && m.GetParameters().Length == 1),
+                    filterValue),
+                FilterOperator.StartsWith => Expression.Call(propertyValue,
+                    typeof(string).GetMethods().First(m => m.Name == "StartsWith" && m.GetParameters().Length == 1),
+                    filterValue),
+                _ => Expression.Equal(propertyValue, filterValue)
+            };
         }
 
         // Workaround to ensure that the filter value gets passed as a parameter in generated SQL from EF Core
         // See https://github.com/aspnet/EntityFrameworkCore/issues/3361
         // Expression.Constant passed the target type to allow Nullable comparison
         // See http://bradwilson.typepad.com/blog/2008/07/creating-nullab.html
-        private Expression GetClosureOverConstant<T>(T constant, Type targetType)
+        private static Expression GetClosureOverConstant<T>(T constant, Type targetType)
         {
             return Expression.Constant(constant, targetType);
         }
 
-        private IQueryable<TEntity> ApplySorting<TEntity>(
-            TPagrModel model,
-            IQueryable<TEntity> result,
-            object[] dataForCustomMethods = null)
+        private IQueryable<TEntity> ApplySorting<TEntity>(TPagrModel model, IQueryable<TEntity> result, object[] dataForCustomMethods = null)
         {
             if (model?.GetSortsParsed() == null)
             {
@@ -346,12 +320,7 @@ namespace Pagr.Services
                 else
                 {
                     result = ApplyCustomMethod(result, sortTerm.Name, _customSortMethods,
-                        new object[]
-                        {
-                        result,
-                        useThenBy,
-                        sortTerm.Descending
-                        }, dataForCustomMethods);
+                        new object[] { result, useThenBy, sortTerm.Descending }, dataForCustomMethods);
                 }
                 useThenBy = true;
             }
@@ -359,19 +328,19 @@ namespace Pagr.Services
             return result;
         }
 
-        private IQueryable<TEntity> ApplyPagination<TEntity>(
-            TPagrModel model,
-            IQueryable<TEntity> result)
+        private IQueryable<TEntity> ApplyPagination<TEntity>(TPagrModel model, IQueryable<TEntity> result)
         {
             var page = model?.Page ?? 1;
             var pageSize = model?.PageSize ?? _options.Value.DefaultPageSize;
             var maxPageSize = _options.Value.MaxPageSize > 0 ? _options.Value.MaxPageSize : pageSize;
 
-            if (pageSize > 0)
+            if (pageSize <= 0)
             {
-                result = result.Skip((page - 1) * pageSize);
-                result = result.Take(Math.Min(pageSize, maxPageSize));
+                return result;
             }
+
+            result = result.Skip((page - 1) * pageSize);
+            result = result.Take(Math.Min(pageSize, maxPageSize));
 
             return result;
         }
@@ -381,34 +350,26 @@ namespace Pagr.Services
             return mapper;
         }
 
-        private (string, PropertyInfo) GetPagrProperty<TEntity>(
-            bool canSortRequired,
-            bool canFilterRequired,
-            string name)
+        private (string, PropertyInfo) GetPagrProperty<TEntity>(bool canSortRequired, bool canFilterRequired, string name)
         {
-            var property = mapper.FindProperty<TEntity>(canSortRequired, canFilterRequired, name, _options.Value.CaseSensitive);
-            if (property.Item1 == null)
+            var property = _mapper.FindProperty<TEntity>(canSortRequired, canFilterRequired, name, _options.Value.CaseSensitive);
+            if (property.Item1 != null)
             {
-                var prop = FindPropertyByPagrAttribute<TEntity>(canSortRequired, canFilterRequired, name, _options.Value.CaseSensitive);
-                return (prop?.Name, prop);
+                return property;
             }
-            return property;
+
+            var prop = FindPropertyByPagrAttribute<TEntity>(canSortRequired, canFilterRequired, name, _options.Value.CaseSensitive);
+            return (prop?.Name, prop);
 
         }
 
-        private PropertyInfo FindPropertyByPagrAttribute<TEntity>(
-            bool canSortRequired,
-            bool canFilterRequired,
-            string name,
-            bool isCaseSensitive)
+        private static PropertyInfo FindPropertyByPagrAttribute<TEntity>(bool canSortRequired, bool canFilterRequired, string name, bool isCaseSensitive)
         {
-            return Array.Find(typeof(TEntity).GetProperties(), p =>
-            {
-                return p.GetCustomAttribute(typeof(PagrAttribute)) is PagrAttribute pagrAttribute
-                && (!canSortRequired || pagrAttribute.CanSort)
-                && (!canFilterRequired || pagrAttribute.CanFilter)
-                && (pagrAttribute.Name ?? p.Name).Equals(name, isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
-            });
+            return Array.Find(typeof(TEntity).GetProperties(),
+                p => p.GetCustomAttribute(typeof(PagrAttribute)) is PagrAttribute pagrAttribute
+                     && (!canSortRequired || pagrAttribute.CanSort)
+                     && (!canFilterRequired || pagrAttribute.CanFilter)
+                     && (pagrAttribute.Name ?? p.Name).Equals(name, isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase));
         }
 
         private IQueryable<TEntity> ApplyCustomMethod<TEntity>(IQueryable<TEntity> result, string name, object parent, object[] parameters, object[] optionalParameters = null)
@@ -462,40 +423,34 @@ namespace Pagr.Services
             }
             else
             {
-                var incompatibleCustomMethods = parent?
-                                                    .GetType()
-                                                    .GetMethods
-                                                    (
-                                                        _options.Value.CaseSensitive
-                                                            ? BindingFlags.Default
-                                                            : BindingFlags.IgnoreCase | BindingFlags.Public |
-                                                              BindingFlags.Instance
-                                                    )
-                                                    .Where(method => string.Equals(method.Name, name,
-                                                        _options.Value.CaseSensitive
-                                                            ? StringComparison.InvariantCulture
-                                                            : StringComparison.InvariantCultureIgnoreCase))
-                                                    .ToList()
-                                                ??
-                                                new List<MethodInfo>();
+                var incompatibleCustomMethods =
+                    parent?
+                        .GetType()
+                        .GetMethods(_options.Value.CaseSensitive
+                            ? BindingFlags.Default
+                            : BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)
+                        .Where(method => string.Equals(method.Name, name,
+                            _options.Value.CaseSensitive
+                                ? StringComparison.InvariantCulture
+                                : StringComparison.InvariantCultureIgnoreCase))
+                        .ToList()
+                    ?? new List<MethodInfo>();
 
-                if (incompatibleCustomMethods.Any())
-                {
-                    var incompatibles =
-                        from incompatibleCustomMethod in incompatibleCustomMethods
-                        let expected = typeof(IQueryable<TEntity>)
-                        let actual = incompatibleCustomMethod.ReturnType
-                        select new PagrIncompatibleMethodException(name, expected, actual,
-                            $"{name} failed. Expected a custom method for type {expected} but only found for type {actual}");
-
-                    var aggregate = new AggregateException(incompatibles);
-
-                    throw new PagrIncompatibleMethodException(aggregate.Message, aggregate);
-                }
-                else
+                if (!incompatibleCustomMethods.Any())
                 {
                     throw new PagrMethodNotFoundException(name, $"{name} not found.");
                 }
+
+                var incompatibles =
+                    from incompatibleCustomMethod in incompatibleCustomMethods
+                    let expected = typeof(IQueryable<TEntity>)
+                    let actual = incompatibleCustomMethod.ReturnType
+                    select new PagrIncompatibleMethodException(name, expected, actual,
+                        $"{name} failed. Expected a custom method for type {expected} but only found for type {actual}");
+
+                var aggregate = new AggregateException(incompatibles);
+
+                throw new PagrIncompatibleMethodException(aggregate.Message, aggregate);
             }
 
             return result;

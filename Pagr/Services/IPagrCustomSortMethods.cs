@@ -1,6 +1,4 @@
 ﻿namespace Pagr.Services
 {
-    public interface IPagrCustomSortMethods
-    {
-    }
+    public interface IPagrCustomSortMethods { }
 }

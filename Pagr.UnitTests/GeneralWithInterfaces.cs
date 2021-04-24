@@ -421,7 +421,7 @@ namespace Pagr.UnitTests
 
             var result = _processor.Apply(model, _comments);
             Assert.Equal(1, result.Count());
-            Assert.Equal(2, result.FirstOrDefault().Id);
+            Assert.Equal(2, result.FirstOrDefault()?.Id);
         }
 
         [Fact]

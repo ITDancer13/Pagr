@@ -64,7 +64,7 @@ namespace Pagr.Services
 
             private void UpdateMap()
             {
-                var metadata = new PagrPropertyMetadata()
+                var metadata = new PagrPropertyMetadata
                 {
                     Name = _name,
                     FullName = _fullName,
@@ -80,8 +80,8 @@ namespace Pagr.Services
             {
                 if (!(exp.Body is MemberExpression body))
                 {
-                    var ubody = (UnaryExpression)exp.Body;
-                    body = ubody.Operand as MemberExpression;
+                    var unaryExprBody = (UnaryExpression)exp.Body;
+                    body = unaryExprBody.Operand as MemberExpression;
                 }
 
                 var member = body?.Member as PropertyInfo;
@@ -96,21 +96,17 @@ namespace Pagr.Services
             }
         }
 
-        public (string, PropertyInfo) FindProperty<TEntity>(
-            bool canSortRequired,
-            bool canFilterRequired,
-            string name,
-            bool isCaseSensitive)
+        public (string, PropertyInfo) FindProperty<TEntity>(bool canSortRequired, bool canFilterRequired, string name, bool isCaseSensitive)
         {
             try
             {
-                var result = _map[typeof(TEntity)]
+                var (propertyInfo, metadata) = _map[typeof(TEntity)]
                     .FirstOrDefault(kv =>
-                    kv.Value.Name.Equals(name, isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase)
-                    && (!canSortRequired || kv.Value.CanSort)
-                    && (!canFilterRequired || kv.Value.CanFilter));
+                        kv.Value.Name.Equals(name, isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase)
+                        && (!canSortRequired || kv.Value.CanSort)
+                        && (!canFilterRequired || kv.Value.CanFilter));
 
-                return (result.Value?.FullName, result.Key);
+                return (metadata?.FullName, propertyInfo);
             }
             catch (Exception ex) when (ex is KeyNotFoundException || ex is ArgumentNullException)
             {
