@@ -1,40 +1,40 @@
-# Sieve
-⚗️ Sieve is a simple, clean, and extensible framework for .NET Core that **adds sorting, filtering, and pagination functionality out of the box**. 
-Most common use case would be for serving ASP.NET Core GET queries.
+# Pagr based on Sieve
 
-[![NuGet Release](https://img.shields.io/nuget/v/Sieve.svg?style=flat-square)](https://www.nuget.org/packages/Sieve)
+Pagr is a fork from [Sieve](https://github.com/Biarity/Sieve) created by [Biarity](https://github.com/Biarity). As Pagr is a very young fork, it's  compatible with the original project, but all occurences of *Sieve* in classes, interfaces or methods are replaced by *Pagr*.
 
-[Get Sieve on nuget](https://www.nuget.org/packages/Sieve/)
+## What is Pagr
+
+Pagr is a simple, clean, and extensible framework for .NET Core that **adds sorting, filtering, and pagination functionality out of the box**.  Most common use case would be for serving ASP.NET Core GET queries.
 
 ## Usage for ASP.NET Core
 
 In this example, consider an app with a `Post` entity. 
-We'll use Sieve to add sorting, filtering, and pagination capabilities when GET-ing all available posts.
+We'll use Pagr to add sorting, filtering, and pagination capabilities when GET-ing all available posts.
 
 ### 1. Add required services
 
-Inject the `SieveProcessor` service. So in `Startup.cs` add:
+Inject the `PagrProcessor` service. So in `Startup.cs` add:
 ```C#
-services.AddScoped<SieveProcessor>();
+services.AddScoped<PagrProcessor>();
 ```
 
 ### 2. Tell Sieve which properties you'd like to sort/filter in your models
 
-Sieve will only sort/filter properties that have the attribute `[Sieve(CanSort = true, CanFilter = true)]` on them (they don't have to be both true).
+Pagr will only sort/filter properties that have the attribute `[Pagr(CanSort = true, CanFilter = true)]` on them (they don't have to be both true).
 So for our `Post` entity model example:
 ```C#
 public int Id { get; set; }
 
-[Sieve(CanFilter = true, CanSort = true)]
+[Pagr(CanFilter = true, CanSort = true)]
 public string Title { get; set; }
 
-[Sieve(CanFilter = true, CanSort = true)]
+[Pagr(CanFilter = true, CanSort = true)]
 public int LikeCount { get; set; }
 
-[Sieve(CanFilter = true, CanSort = true)]
+[Pagr(CanFilter = true, CanSort = true)]
 public int CommentCount { get; set; }
 
-[Sieve(CanFilter = true, CanSort = true, Name = "created")]
+[Pagr(CanFilter = true, CanSort = true, Name = "created")]
 public DateTimeOffset DateCreated { get; set; } = DateTimeOffset.UtcNow;
 
 ```
@@ -42,16 +42,16 @@ There is also the `Name` parameter that you can use to have a different name for
 
 Alternatively, you can use [Fluent API](#fluent-api) to do the same. This is especially useful if you don't want to use attributes or have multiple APIs. 
 
-### 3. Get sort/filter/page queries by using the Sieve model in your controllers
+### 3. Get sort/filter/page queries by using the Pagr model in your controllers
 
-In the action that handles returning Posts, use `SieveModel` to get the sort/filter/page query. 
-Apply it to your data by injecting `SieveProcessor` into the controller and using its `Apply<TEntity>` method. So for instance:
+In the action that handles returning Posts, use `PagrModel` to get the sort/filter/page query. 
+Apply it to your data by injecting `PagrProcessor` into the controller and using its `Apply<TEntity>` method. So for instance:
 ```C#
 [HttpGet]
-public JsonResult GetPosts(SieveModel sieveModel) 
+public JsonResult GetPosts(PagrModel pagrModel) 
 {
     var result = _dbContext.Posts.AsNoTracking(); // Makes read-only queries faster
-    result = _sieveProcessor.Apply(sieveModel, result); // Returns `result` after applying the sort/filter/page query in `SieveModel` to it
+    result = _pagrProcessor.Apply(pagrModel, result); // Returns `result` after applying the sort/filter/page query in `PagrModel` to it
     return Json(result.ToList());
 }
 ```
@@ -63,16 +63,16 @@ You can also explicitly specify if only filtering, sorting, and/or pagination sh
 
 ### Add custom sort/filter methods
 
-If you want to add custom sort/filter methods, inject `ISieveCustomSortMethods` or `ISieveCustomFilterMethods` with the implementation being a class that has custom sort/filter methods that Sieve will search through.
+If you want to add custom sort/filter methods, inject `IPagrCustomSortMethods` or `IPagrCustomFilterMethods` with the implementation being a class that has custom sort/filter methods that Pagr will search through.
 
 For instance:
 ```C#
-services.AddScoped<ISieveCustomSortMethods, SieveCustomSortMethods>();
-services.AddScoped<ISieveCustomFilterMethods, SieveCustomFilterMethods>();
+services.AddScoped<IPagrCustomSortMethods, PagrCustomSortMethods>();
+services.AddScoped<IPagrCustomFilterMethods, PagrCustomFilterMethods>();
 ```
-Where `SieveCustomSortMethodsOfPosts` for example is:
+Where `PagrCustomSortMethodsOfPosts` for example is:
 ```C#
-public class SieveCustomSortMethods : ISieveCustomSortMethods
+public class PagrCustomSortMethods : IPagrCustomSortMethods
 {
     public IQueryable<Post> Popularity(IQueryable<Post> source, bool useThenBy, bool desc) // The method is given an indicator of weather to use ThenBy(), and if the query is descending 
     {
@@ -95,9 +95,9 @@ public class SieveCustomSortMethods : ISieveCustomSortMethods
     }
 }
 ```
-And `SieveCustomFilterMethods`:
+And `PagrCustomFilterMethods`:
 ```C#
-public class SieveCustomFilterMethods : ISieveCustomFilterMethods
+public class PagrCustomFilterMethods : IPagrCustomFilterMethods
 {
     public IQueryable<Post> IsNew(IQueryable<Post> source, string op, string[] values) // The method is given the {Operator} & {Value}
     {
@@ -115,19 +115,19 @@ public class SieveCustomFilterMethods : ISieveCustomFilterMethods
 }
 ```
 
-## Configure Sieve
-Use the [ASP.NET Core options pattern](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options) with `SieveOptions` to tell Sieve where to look for configuration. For example:
+## Configure Pagr
+Use the [ASP.NET Core options pattern](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options) with `PagrOptions` to tell Pagr where to look for configuration. For example:
 ```C#
-services.Configure<SieveOptions>(Configuration.GetSection("Sieve"));
+services.Configure<PagrOptions>(Configuration.GetSection("Pagr"));
 ```
 Then you can add the configuration:
 ```json
 {
-    "Sieve": {
+    "Pagr": {
         "CaseSensitive": "boolean: should property names be case-sensitive? Defaults to false",
         "DefaultPageSize": "int number: optional number to fallback to when no page argument is given. Set <=0 to disable paging if no pageSize is specified (default).",
         "MaxPageSize": "int number: maximum allowed page size. Set <=0 to make infinite (default)",
-        "ThrowExceptions": "boolean: should Sieve throw exceptions instead of silently failing? Defaults to false"
+        "ThrowExceptions": "boolean: should Pagr throw exceptions instead of silently failing? Defaults to false"
     }
 }
 ```
@@ -148,7 +148,7 @@ GET /GetPosts
 More formally:
 * `sorts` is a comma-delimited ordered list of property names to sort by. Adding a `-` before the name switches to sorting descendingly.
 * `filters` is a comma-delimited list of `{Name}{Operator}{Value}` where
-    * `{Name}` is the name of a property with the Sieve attribute or the name of a custom filter method for TEntity
+    * `{Name}` is the name of a property with the Pagr attribute or the name of a custom filter method for TEntity
         * You can also have multiple names (for OR logic) by enclosing them in brackets and using a pipe delimiter, eg. `(LikeCount|CommentCount)>10` asks if `LikeCount` or `CommentCount` is `>10`
     * `{Operator}` is one of the [Operators](#operators)
     * `{Value}` is the value to use for filtering
@@ -189,7 +189,7 @@ mapper.Property<Post>(p => p.Creator.Name)
 Now you can make requests such as: `filters=User.Name==specific_name`.
 
 ### Creating your own DSL
-You can replace this DSL with your own (eg. use JSON instead) by implementing an [ISieveModel](https://github.com/Biarity/Sieve/blob/master/Sieve/Models/ISieveModel.cs). You can use the default [SieveModel](https://github.com/Biarity/Sieve/blob/master/Sieve/Models/SieveModel.cs) for reference.
+You can replace this DSL with your own (eg. use JSON instead) by implementing an IPagrModel. You can use the default PagrModel for reference.
 
 ### Operators
 | Operator   | Meaning                  |
@@ -211,35 +211,35 @@ You can replace this DSL with your own (eg. use JSON instead) by implementing an
 | `!@=*`     | Case-insensitive string does not Contains |
 | `!_=*`     | Case-insensitive string does not Starts with |
 
-### Handle Sieve's exceptions
+### Handle Pagr's exceptions
 
-Sieve will silently fail unless `ThrowExceptions` in the configuration is set to true. 3 kinds of custom exceptions can be thrown:
+Pagr will silently fail unless `ThrowExceptions` in the configuration is set to true. 3 kinds of custom exceptions can be thrown:
 
-* `SieveMethodNotFoundException` with a `MethodName`
-* `SieveIncompatibleMethodException` with a `MethodName`, an `ExpectedType` and an `ActualType`
-* `SieveException` which encapsulates any other exception types in its `InnerException`
+* `PagrMethodNotFoundException` with a `MethodName`
+* `PagrIncompatibleMethodException` with a `MethodName`, an `ExpectedType` and an `ActualType`
+* `PagrException` which encapsulates any other exception types in its `InnerException`
 
-It is recommended that you write exception-handling middleware to globally handle Sieve's exceptions when using it with ASP.NET Core.
+It is recommended that you write exception-handling middleware to globally handle Pagr's exceptions when using it with ASP.NET Core.
 
 
 ### Example project
-You can find an example project incorporating most Sieve concepts in [SieveTests](https://github.com/Biarity/Sieve/tree/master/SieveTests).
+You can find an example project incorporating most Pagr concepts in [Pagr.Sample](https://github.com/uhlpac/Pagr/tree/master/Pagr.Sample).
 
 ## Fluent API
-To use the Fluent API instead of attributes in marking properties, setup an alternative `SieveProcessor` that overrides `MapProperties`. For example:
+To use the Fluent API instead of attributes in marking properties, setup an alternative `PagrProcessor` that overrides `MapProperties`. For example:
 
 ```C#
-public class ApplicationSieveProcessor : SieveProcessor
+public class ApplicationPagrProcessor : PagrProcessor
 {
-    public ApplicationSieveProcessor(
-        IOptions<SieveOptions> options, 
-        ISieveCustomSortMethods customSortMethods, 
-        ISieveCustomFilterMethods customFilterMethods) 
+    public ApplicationPagrProcessor(
+        IOptions<PagrOptions> options, 
+        IPagrCustomSortMethods customSortMethods, 
+        IPagrCustomFilterMethods customFilterMethods) 
         : base(options, customSortMethods, customFilterMethods)
     {
     }
 
-    protected override SievePropertyMapper MapProperties(SievePropertyMapper mapper)
+    protected override PagrPropertyMapper MapProperties(PagrPropertyMapper mapper)
     {
         mapper.Property<Post>(p => p.Title)
             .CanFilter()
@@ -260,26 +260,9 @@ public class ApplicationSieveProcessor : SieveProcessor
 
 Now you should inject the new class instead:
 ```C#
-services.AddScoped<ISieveProcessor, ApplicationSieveProcessor>();
+services.AddScoped<IPagrProcessor, ApplicationPagrProcessor>();
 ```
 
-Find More on Sieve's Fluent API [here](https://github.com/Biarity/Sieve/issues/4#issuecomment-364629048).
-
-## Upgrading to v2.2.0
-
-2.2.0 introduced OR logic for filter values. This means your custom filters will need to accept multiple values rather than just the one.
-
-* In all your custom filter methods, change the last argument to be a `string[] values` instead of `string value`
-* The first value can then be found to be `values[0]` rather than `value`
-* Multiple values will be present if the client uses OR logic
-
-## Upgrading from v1.* to v2.*
-
-* Changes to the `SieveProcessor` API:
-    * `ApplyAll` is now `Apply`
-    * `ApplyFiltering`, `ApplySorting`, and `ApplyPagination` are now depricated - instead you can use optional arguments on `Apply` to achieve the same
-* Instead of just removing commas from `{Value}`s, [you'll also need to remove brackets and pipes](#send-a-request)
-
-
 ## License & Contributing
-Sieve is licensed under Apache 2.0. Any contributions highly appreciated!
+Pagr is licensed under Apache 2.0. Any contributions highly appreciated!
+Please respect our [Code of Conduct](https://github.com/uhlpac/Pagr/blob/build/CODE_OF_CONDUCT.md)
