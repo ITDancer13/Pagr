@@ -86,7 +86,7 @@ namespace Pagr.UnitTests
                 {
                     Id = 2,
                     DateCreated = DateTimeOffset.UtcNow,
-                    Text = "This is a brand new comment. (Text in braces)"
+                    Text = "This is a brand new comment. (Text in braces, comma separated)"
                 },
             }.AsQueryable();
         }
@@ -182,6 +182,23 @@ namespace Pagr.UnitTests
             var result = _processor.Apply(model, _posts);
 
             Assert.True(result.Count() == 2);
+        }
+        
+        [Theory]
+        [InlineData(@"Text@=*\,")]
+        [InlineData(@"Text@=*\, ")]
+        [InlineData(@"Text@=*braces\,")]
+        [InlineData(@"Text@=*braces\, comma")]
+        public void CanFilterWithEscapedComma(string filter)
+        {
+            var model = new PagrModel
+            {
+                Filters = filter
+            };
+
+            var result = _processor.Apply(model, _comments);
+
+            Assert.True(result.Count() == 1);
         }
 
         [Fact]

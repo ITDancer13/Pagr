@@ -15,6 +15,7 @@ namespace Pagr.Models
         where TSortTerm : ISortTerm, new()
     {
         private const string EscapedCommaPattern = @"(?<!($|[^\\])(\\\\)*?\\),\s*";
+        private const string EscapedComma = @"\,";
 
         [DataMember]
         public string Filters { get; set; }
@@ -35,12 +36,17 @@ namespace Pagr.Models
                 var value = new List<TFilterTerm>();
                 foreach (var filter in Regex.Split(Filters, EscapedCommaPattern))
                 {
-                    if (string.IsNullOrWhiteSpace(filter)) continue;
+                    if (string.IsNullOrWhiteSpace(filter))
+                    {
+                        continue;
+                    }
+
+                    var filterValue = filter.Replace(EscapedComma, ",");
 
                     if (filter.StartsWith("("))
                     {
-                        var filterOpAndVal = filter.Substring(filter.LastIndexOf(")", StringComparison.Ordinal) + 1);
-                        var subFilters = filter.Replace(filterOpAndVal, "").Replace("(", "").Replace(")", "");
+                        var filterOpAndVal = filterValue[(filterValue.LastIndexOf(")", StringComparison.Ordinal) + 1)..];
+                        var subFilters = filterValue.Replace(filterOpAndVal, "").Replace("(", "").Replace(")", "");
                         var filterTerm = new TFilterTerm
                         {
                             Filter = subFilters + filterOpAndVal
@@ -51,7 +57,7 @@ namespace Pagr.Models
                     {
                         var filterTerm = new TFilterTerm
                         {
-                            Filter = filter
+                            Filter = filterValue
                         };
                         value.Add(filterTerm);
                     }
