@@ -25,10 +25,29 @@ namespace Pagr.UnitTests
                     Id = 0,
                     DateCreated = DateTimeOffset.UtcNow,
                     Text = "This text contains null somewhere in the middle of a string",
+                    Author = "Dog",
                 },
-                new Comment {Id = 1, DateCreated = DateTimeOffset.UtcNow, Text = "null is here in the text",},
-                new Comment {Id = 2, DateCreated = DateTimeOffset.UtcNow, Text = "Regular comment without n*ll.",},
-                new Comment {Id = 100, DateCreated = DateTimeOffset.UtcNow, Text = null,},
+                new Comment
+                {
+                    Id = 1,
+                    DateCreated = DateTimeOffset.UtcNow, 
+                    Text = "null is here in the text",
+                    Author = "Cat",
+                },
+                new Comment
+                {
+                    Id = 2, 
+                    DateCreated = DateTimeOffset.UtcNow, 
+                    Text = "Regular comment without n*ll.",
+                    Author = "Mouse",
+                },
+                new Comment
+                {
+                    Id = 100, 
+                    DateCreated = DateTimeOffset.UtcNow, 
+                    Text = null,
+                    Author = "null",
+                },
             }.AsQueryable();
         }
 
@@ -65,6 +84,21 @@ namespace Pagr.UnitTests
             var result = _processor.Apply(model, _comments);
 
             Assert.Equal(new[] {0, 1}, result.Select(p => p.Id));
+        }
+        
+        [Theory]
+        [InlineData("Text|Author==null", 100)]
+        [InlineData("Text|Author@=null", 0, 1, 100)]
+        [InlineData("Text|Author@=*null", 0, 1, 100)]
+        [InlineData("Text|Author_=null", 1, 100)]
+        [InlineData("Text|Author_=*null", 1, 100)]
+        public void MultiFilter_Contains_NullString(string filter, params int[] expectedIds)
+        {
+            var model = new PagrModel {Filters = filter};
+
+            var result = _processor.Apply(model, _comments);
+
+            Assert.Equal(expectedIds, result.Select(p => p.Id));
         }
 
         [Theory]
