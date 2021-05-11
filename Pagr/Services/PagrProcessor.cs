@@ -29,13 +29,14 @@ namespace Pagr.Services
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods, IPagrCustomFilterMethods customFilterMethods)
-            : base(options, customSortMethods, customFilterMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods,
+            IPagrCustomFilterMethods customFilterMethods) : base(options, customSortMethods, customFilterMethods)
         {
         }
     }
 
-    public class PagrProcessor<TFilterTerm, TSortTerm> : PagrProcessor<PagrModel<TFilterTerm, TSortTerm>, TFilterTerm, TSortTerm>, IPagrProcessor<TFilterTerm, TSortTerm>
+    public class PagrProcessor<TFilterTerm, TSortTerm> :
+        PagrProcessor<PagrModel<TFilterTerm, TSortTerm>, TFilterTerm, TSortTerm>, IPagrProcessor<TFilterTerm, TSortTerm>
         where TFilterTerm : IFilterTerm, new()
         where TSortTerm : ISortTerm, new()
     {
@@ -54,7 +55,8 @@ namespace Pagr.Services
         {
         }
 
-        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods, IPagrCustomFilterMethods customFilterMethods)
+        public PagrProcessor(IOptions<PagrOptions> options, IPagrCustomSortMethods customSortMethods,
+            IPagrCustomFilterMethods customFilterMethods)
             : base(options, customSortMethods, customFilterMethods)
         {
         }
@@ -114,8 +116,9 @@ namespace Pagr.Services
         /// <param name="applySorting">Should the data be sorted? Defaults to true.</param>
         /// <param name="applyPagination">Should the data be paginated? Defaults to true.</param>
         /// <returns>Returns a transformed version of `source`</returns>
-        public IQueryable<TEntity> Apply<TEntity>(TPagrModel model, IQueryable<TEntity> source, object[] dataForCustomMethods = null,
-            bool applyFiltering = true, bool applySorting = true, bool applyPagination = true)
+        public IQueryable<TEntity> Apply<TEntity>(TPagrModel model, IQueryable<TEntity> source,
+            object[] dataForCustomMethods = null, bool applyFiltering = true, bool applySorting = true,
+            bool applyPagination = true)
         {
             var result = source;
 
@@ -159,7 +162,8 @@ namespace Pagr.Services
             }
         }
 
-        private IQueryable<TEntity> ApplyFiltering<TEntity>(TPagrModel model, IQueryable<TEntity> result, object[] dataForCustomMethods = null)
+        private IQueryable<TEntity> ApplyFiltering<TEntity>(TPagrModel model, IQueryable<TEntity> result,
+            object[] dataForCustomMethods = null)
         {
             if (model?.GetFiltersParsed() == null)
             {
@@ -176,25 +180,20 @@ namespace Pagr.Services
                     var (fullPropertyName, property) = GetPagrProperty<TEntity>(false, true, filterTermName);
                     if (property != null)
                     {
-                        Expression propertyValue = parameter;
-                        Expression nullCheck = null;
-                        var names = fullPropertyName.Split('.');
-                        for (var i = 0; i < names.Length; i++)
+                        if (filterTerm.Values == null)
                         {
-                            propertyValue = Expression.PropertyOrField(propertyValue, names[i]);
-
-                            if (i != names.Length - 1 && propertyValue.Type.IsNullable())
-                            {
-                                nullCheck = GenerateFilterNullCheckExpression(propertyValue, nullCheck);
-                            }
+                            continue;
                         }
-
-                        if (filterTerm.Values == null) continue;
 
                         var converter = TypeDescriptor.GetConverter(property.PropertyType);
                         foreach (var filterTermValue in filterTerm.Values)
                         {
-                            var isFilterTermValueNull = filterTermValue.ToLower() == NullFilterValue;
+                            var (propertyValue, nullCheck) =
+                                GetPropertyValueAndNullCheckExpression(parameter, fullPropertyName);
+
+                            var isFilterTermValueNull =
+                                IsFilterTermValueNull(propertyValue, filterTerm, filterTermValue);
+
                             var filterValue = isFilterTermValueNull
                                 ? Expression.Constant(null, property.PropertyType)
                                 : ConvertStringValueToConstantExpression(filterTermValue, property, converter);
@@ -203,11 +202,11 @@ namespace Pagr.Services
                             {
                                 propertyValue = Expression.Call(propertyValue,
                                     typeof(string).GetMethods()
-                                    .First(m => m.Name == "ToUpper" && m.GetParameters().Length == 0));
+                                        .First(m => m.Name == "ToUpper" && m.GetParameters().Length == 0));
 
                                 filterValue = Expression.Call(filterValue,
                                     typeof(string).GetMethods()
-                                    .First(m => m.Name == "ToUpper" && m.GetParameters().Length == 0));
+                                        .First(m => m.Name == "ToUpper" && m.GetParameters().Length == 0));
                             }
 
                             var expression = GetExpression(filterTerm, filterValue, propertyValue);
@@ -217,53 +216,97 @@ namespace Pagr.Services
                                 expression = Expression.Not(expression);
                             }
 
-                            var filterValueNullCheck = !isFilterTermValueNull && propertyValue.Type.IsNullable()
-                                ? GenerateFilterNullCheckExpression(propertyValue, nullCheck)
-                                : nullCheck;
-
+                            var filterValueNullCheck = GetFilterValueNullCheck(parameter, fullPropertyName, isFilterTermValueNull);
                             if (filterValueNullCheck != null)
                             {
                                 expression = Expression.AndAlso(filterValueNullCheck, expression);
                             }
 
-                            innerExpression = innerExpression == null ? expression : Expression.OrElse(innerExpression, expression);
+                            innerExpression = innerExpression == null
+                                ? expression
+                                : Expression.OrElse(innerExpression, expression);
                         }
                     }
                     else
                     {
-                        result = ApplyCustomMethod(result, filterTermName, _customFilterMethods, new object[]
-                        {
-                            result,
-                            filterTerm.Operator,
-                            filterTerm.Values
-                        }, dataForCustomMethods);
-
+                        result = ApplyCustomMethod(result, filterTermName, _customFilterMethods,
+                            new object[] {result, filterTerm.Operator, filterTerm.Values}, dataForCustomMethods);
                     }
                 }
+
                 if (outerExpression == null)
                 {
                     outerExpression = innerExpression;
                     continue;
                 }
+
                 if (innerExpression == null)
                 {
                     continue;
                 }
+
                 outerExpression = Expression.AndAlso(outerExpression, innerExpression);
             }
+
             return outerExpression == null
                 ? result
                 : result.Where(Expression.Lambda<Func<TEntity, bool>>(outerExpression, parameter));
         }
 
-        private static Expression GenerateFilterNullCheckExpression(Expression propertyValue, Expression nullCheckExpression)
+        private static Expression GetFilterValueNullCheck(Expression parameter, string fullPropertyName,
+            bool isFilterTermValueNull)
+        {
+            var (propertyValue, nullCheck) = GetPropertyValueAndNullCheckExpression(parameter, fullPropertyName);
+
+            if (!isFilterTermValueNull && propertyValue.Type.IsNullable())
+            {
+                return GenerateFilterNullCheckExpression(propertyValue, nullCheck);
+            }
+
+            return nullCheck;
+        }
+
+        private static bool IsFilterTermValueNull(Expression propertyValue, TFilterTerm filterTerm,
+            string filterTermValue)
+        {
+            var isNotString = propertyValue.Type != typeof(string);
+
+            var isValidStringNullOperation = filterTerm.OperatorParsed == FilterOperator.Equals ||
+                                             filterTerm.OperatorParsed == FilterOperator.NotEquals;
+
+            return filterTermValue.ToLower() == NullFilterValue && (isNotString || isValidStringNullOperation);
+        }
+
+        private static (Expression propertyValue, Expression nullCheck) GetPropertyValueAndNullCheckExpression(
+            Expression parameter, string fullPropertyName)
+        {
+            var propertyValue = parameter;
+            Expression nullCheck = null;
+            var names = fullPropertyName.Split('.');
+            for (var i = 0; i < names.Length; i++)
+            {
+                propertyValue = Expression.PropertyOrField(propertyValue, names[i]);
+
+                if (i != names.Length - 1 && propertyValue.Type.IsNullable())
+                {
+                    nullCheck = GenerateFilterNullCheckExpression(propertyValue, nullCheck);
+                }
+            }
+
+            return (propertyValue, nullCheck);
+        }
+
+        private static Expression GenerateFilterNullCheckExpression(Expression propertyValue,
+            Expression nullCheckExpression)
         {
             return nullCheckExpression == null
                 ? Expression.NotEqual(propertyValue, Expression.Default(propertyValue.Type))
-                : Expression.AndAlso(nullCheckExpression, Expression.NotEqual(propertyValue, Expression.Default(propertyValue.Type)));
+                : Expression.AndAlso(nullCheckExpression,
+                    Expression.NotEqual(propertyValue, Expression.Default(propertyValue.Type)));
         }
 
-        private static Expression ConvertStringValueToConstantExpression(string value, PropertyInfo property, TypeConverter converter)
+        private static Expression ConvertStringValueToConstantExpression(string value, PropertyInfo property,
+            TypeConverter converter)
         {
             dynamic constantVal = converter.CanConvertFrom(typeof(string))
                 ? converter.ConvertFrom(value)
@@ -301,7 +344,8 @@ namespace Pagr.Services
             return Expression.Constant(constant, targetType);
         }
 
-        private IQueryable<TEntity> ApplySorting<TEntity>(TPagrModel model, IQueryable<TEntity> result, object[] dataForCustomMethods = null)
+        private IQueryable<TEntity> ApplySorting<TEntity>(TPagrModel model, IQueryable<TEntity> result,
+            object[] dataForCustomMethods = null)
         {
             if (model?.GetSortsParsed() == null)
             {
@@ -320,8 +364,9 @@ namespace Pagr.Services
                 else
                 {
                     result = ApplyCustomMethod(result, sortTerm.Name, _customSortMethods,
-                        new object[] { result, useThenBy, sortTerm.Descending }, dataForCustomMethods);
+                        new object[] {result, useThenBy, sortTerm.Descending}, dataForCustomMethods);
                 }
+
                 useThenBy = true;
             }
 
@@ -350,43 +395,52 @@ namespace Pagr.Services
             return mapper;
         }
 
-        private (string, PropertyInfo) GetPagrProperty<TEntity>(bool canSortRequired, bool canFilterRequired, string name)
+        private (string, PropertyInfo) GetPagrProperty<TEntity>(bool canSortRequired, bool canFilterRequired,
+            string name)
         {
-            var property = _mapper.FindProperty<TEntity>(canSortRequired, canFilterRequired, name, _options.Value.CaseSensitive);
+            var property = _mapper.FindProperty<TEntity>(canSortRequired, canFilterRequired, name,
+                _options.Value.CaseSensitive);
             if (property.Item1 != null)
             {
                 return property;
             }
 
-            var prop = FindPropertyByPagrAttribute<TEntity>(canSortRequired, canFilterRequired, name, _options.Value.CaseSensitive);
+            var prop = FindPropertyByPagrAttribute<TEntity>(canSortRequired, canFilterRequired, name,
+                _options.Value.CaseSensitive);
             return (prop?.Name, prop);
-
         }
 
-        private static PropertyInfo FindPropertyByPagrAttribute<TEntity>(bool canSortRequired, bool canFilterRequired, string name, bool isCaseSensitive)
+        private static PropertyInfo FindPropertyByPagrAttribute<TEntity>(bool canSortRequired, bool canFilterRequired,
+            string name, bool isCaseSensitive)
         {
             return Array.Find(typeof(TEntity).GetProperties(),
                 p => p.GetCustomAttribute(typeof(PagrAttribute)) is PagrAttribute pagrAttribute
                      && (!canSortRequired || pagrAttribute.CanSort)
                      && (!canFilterRequired || pagrAttribute.CanFilter)
-                     && (pagrAttribute.Name ?? p.Name).Equals(name, isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase));
+                     && (pagrAttribute.Name ?? p.Name).Equals(name,
+                         isCaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase));
         }
 
-        private IQueryable<TEntity> ApplyCustomMethod<TEntity>(IQueryable<TEntity> result, string name, object parent, object[] parameters, object[] optionalParameters = null)
+        private IQueryable<TEntity> ApplyCustomMethod<TEntity>(IQueryable<TEntity> result, string name, object parent,
+            object[] parameters, object[] optionalParameters = null)
         {
             var customMethod = parent?.GetType()
                 .GetMethodExt(name,
-                _options.Value.CaseSensitive ? BindingFlags.Default : BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance,
-                typeof(IQueryable<TEntity>));
+                    _options.Value.CaseSensitive
+                        ? BindingFlags.Default
+                        : BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance,
+                    typeof(IQueryable<TEntity>));
 
 
             if (customMethod == null)
             {
                 // Find generic methods `public IQueryable<T> Filter<T>(IQueryable<T> source, ...)`
                 var genericCustomMethod = parent?.GetType()
-                .GetMethodExt(name,
-                _options.Value.CaseSensitive ? BindingFlags.Default : BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance,
-                typeof(IQueryable<>));
+                    .GetMethodExt(name,
+                        _options.Value.CaseSensitive
+                            ? BindingFlags.Default
+                            : BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance,
+                        typeof(IQueryable<>));
 
                 if (genericCustomMethod != null &&
                     genericCustomMethod.ReturnType.IsGenericType &&
@@ -394,7 +448,8 @@ namespace Pagr.Services
                 {
                     var genericBaseType = genericCustomMethod.ReturnType.GenericTypeArguments[0];
                     var constraints = genericBaseType.GetGenericParameterConstraints();
-                    if (constraints == null || constraints.Length == 0 || constraints.All((t) => t.IsAssignableFrom(typeof(TEntity))))
+                    if (constraints == null || constraints.Length == 0 ||
+                        constraints.All((t) => t.IsAssignableFrom(typeof(TEntity))))
                     {
                         customMethod = genericCustomMethod.MakeGenericMethod(typeof(TEntity));
                     }
