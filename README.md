@@ -151,7 +151,7 @@ More formally:
     * `{Name}` is the name of a property with the Pagr attribute or the name of a custom filter method for TEntity
         * You can also have multiple names (for OR logic) by enclosing them in brackets and using a pipe delimiter, eg. `(LikeCount|CommentCount)>10` asks if `LikeCount` or `CommentCount` is `>10`
     * `{Operator}` is one of the [Operators](#operators)
-    * `{Value}` is the value to use for filtering
+    * `{Value}` is the value to use for filtering. If the filter contains a comma it must be, escaped **\\,**
         * You can also have multiple values (for OR logic) by using a pipe delimiter, eg. `Title@=new|hot` will return posts with titles that contain the text "`new`" or "`hot`"
 * `page` is the number of page to return
 * `pageSize` is the number of items returned per page 
