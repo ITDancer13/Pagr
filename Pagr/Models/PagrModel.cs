@@ -14,7 +14,14 @@ namespace Pagr.Models
         where TFilterTerm : IFilterTerm, new()
         where TSortTerm : ISortTerm, new()
     {
+        /// <summary>
+        /// Pattern used to split filters and sorts by comma.
+        /// </summary>
         private const string EscapedCommaPattern = @"(?<!($|[^\\])(\\\\)*?\\),\s*";
+        
+        /// <summary>
+        /// Escaped comma e.g. used in filter filter string.
+        /// </summary>
         private const string EscapedComma = @"\,";
 
         [DataMember]
