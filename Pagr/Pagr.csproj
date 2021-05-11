@@ -2,12 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Description>
-      Pagr (based on Sieve) is a simple, clean, and extensible framework for .NET Core that adds sorting, filtering, 
-      and pagination functionality out of the box. Most common use case would be for serving ASP.NET Core GET queries.
-      Documentation available on GitHub: https://github.com/ITDancer13/Pagr
-    </Description>
-    <PackageLicenseUrl>https://github.com/ITDancer13/Pagr/blob/master/LICENSE.txt</PackageLicenseUrl>
+    <Description>Pagr (based on Sieve) is a simple, clean, and extensible framework for .NET Core that adds sorting, filtering, and pagination functionality out of the box. Most common use case would be for serving ASP.NET Core GET queries. Documentation available on GitHub: https://github.com/ITDancer13/Pagr</Description>
     <IsPackable>true</IsPackable>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Authors>2018 Biarity, 2021 Kevin Sommer</Authors>    
@@ -17,6 +12,10 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <PropertyGroup>
