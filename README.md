@@ -1,6 +1,12 @@
 # Pagr based on Sieve
 
+<p align="center">
+    <img src="logo.png" width="200" alt="Pagr Logo" />
+</p>
+
 Pagr is a fork from [Sieve](https://github.com/Biarity/Sieve) created by [Biarity](https://github.com/Biarity). As Pagr is a very young fork, it's  compatible with the original project, but all occurences of *Sieve* in classes, interfaces or methods are replaced by *Pagr*.
+
+[![Nuget](https://img.shields.io/nuget/v/pagr?style=for-the-badge)](https://www.nuget.org/packages/Pagr/)
 
 ## What is Pagr
 
