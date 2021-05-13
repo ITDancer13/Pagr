@@ -12,6 +12,17 @@ Pagr is a fork from [Sieve](https://github.com/Biarity/Sieve) created by [Biarit
 
 Pagr is a simple, clean, and extensible framework for .NET Core that **adds sorting, filtering, and pagination functionality out of the box**.  Most common use case would be for serving ASP.NET Core GET queries.
 
+## Changelog since fork of Sieve
+
+### Version 0.1.0
+- Renaming from Sieve to Pagr
+- Escaped comma can be used in filters e.g. `"Text@=*braces\, comma"`
+- 'Null' as string can be used together with 'Contains' or 'StartsWith' in string filter values e.g. `Text|Author@=*null`  
+
+### Plan for first release v1.0.0
+
+See [Pagr Project v1.0](https://github.com/ITDancer13/Pagr/projects/1).
+
 ## Usage for ASP.NET Core
 
 In this example, consider an app with a `Post` entity. 
